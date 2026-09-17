@@ -174,7 +174,6 @@ elif page == "Log Payment":
             else:
                 st.error("Please enter an amount greater than 0 and a receipt code.")
     conn.close()
-=======
 import streamlit as st
 import sqlite3
 import pandas as pd
