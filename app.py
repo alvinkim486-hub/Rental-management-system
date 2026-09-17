@@ -232,7 +232,77 @@ st.set_page_config(page_title="Rental Dashboard", layout="wide")
 st.sidebar.title("Landlord Controls")
 page = st.sidebar.radio("Navigation", ["Dashboard Overview", "Manage Units", "Log Payment"])
 
+if page == "Dashboard Overview":
+        st.title("Financial & Occupancy Dashboard")
+        
+        conn = get_db_connection()
+        units_df = pd.read_sql_query("SELECT * FROM units", conn)
+        payments_df = pd.read_sql_query("SELECT * FROM payments", conn)
+        rent_payments = pd.read_sql_query("SELECT * FROM payments WHERE payment_type LIKE '%%Rent%%'", conn)
+        conn.close()
 
+        # --- NEW: Calculate Current Month Arrears ---
+        # 1. Find the current month (e.g., "2026-09")
+        current_month = datetime.today().strftime("%Y-%m")
+        
+        # 2. Filter rent payments to only those made this month
+        if not rent_payments.empty:
+            rent_payments['month'] = rent_payments['date'].str[:7]
+            this_month_payments = rent_payments[rent_payments['month'] == current_month]
+            # Sum up how much each unit has paid this month
+            paid_per_unit = this_month_payments.groupby('unit_name')['amount'].sum().reset_index()
+            paid_per_unit.rename(columns={'amount': 'paid_this_month'}, inplace=True)
+        else:
+            paid_per_unit = pd.DataFrame(columns=['unit_name', 'paid_this_month'])
+
+        # 3. Merge payment data with our units data
+        units_summary = pd.merge(units_df, paid_per_unit, on='unit_name', how='left')
+        units_summary['paid_this_month'] = units_summary['paid_this_month'].fillna(0)
+
+        # 4. Calculate 'Amount Not Yet Paid' (only for occupied units)
+        units_summary['unpaid_rent'] = units_summary.apply(
+            lambda row: max(0, row['rent_amount'] - row['paid_this_month']) if 'Occupied' in row['status'] else 0, 
+            axis=1
+        )
+
+        # --- METRICS ---
+        total_expected = units_summary[units_summary['status'].str.contains('Occupied')]['rent_amount'].sum()
+        total_rent_collected_this_month = units_summary['paid_this_month'].sum()
+        total_not_yet_paid = units_summary['unpaid_rent'].sum()
+        total_deposits_held = units_df['deposit_held'].sum()
+        occupied_units = len(units_df[units_df['status'].str.contains('Occupied')])
+        
+        # Display Top Metrics (Updated to focus on the current month)
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Rent Collected (This Month)", f"KSh {total_rent_collected_this_month:,.2f}")
+        col2.metric("Unpaid Rent (This Month)", f"KSh {total_not_yet_paid:,.2f}")
+        col3.metric("Total Deposits Held", f"KSh {total_deposits_held:,.2f}")
+        col4.metric("Occupancy", f"{occupied_units}/12 Units")
+
+        st.divider()
+
+        col_left, col_right = st.columns(2)
+        
+        with col_left:
+            st.subheader("Unit Status & Balances")
+            # Format the display table to look clean
+            display_df = units_summary[['unit_name', 'tenant_name', 'status', 'rent_amount', 'unpaid_rent', 'deposit_held']].copy()
+            display_df.rename(columns={
+                'unit_name': 'Unit',
+                'tenant_name': 'Tenant',
+                'status': 'Status',
+                'rent_amount': 'Base Rent',
+                'unpaid_rent': 'Not Yet Paid',
+                'deposit_held': 'Deposit Held'
+            }, inplace=True)
+            st.dataframe(display_df, use_container_width=True)
+
+        with col_right:
+            st.subheader("Recent Transactions")
+            if not payments_df.empty:
+                st.dataframe(payments_df[['date', 'unit_name', 'payment_type', 'amount', 'mpesa_receipt']].sort_values(by="date", ascending=False).head(10), use_container_width=True)
+            else:
+                st.info("No transactions logged yet.")
 
 elif page == "Manage Units":
     st.title("Move In / Move Out & Adjust Rent")
