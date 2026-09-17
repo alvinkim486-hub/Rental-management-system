@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -384,7 +383,6 @@ elif page == "Log Payment":
             else:
                 st.error("Please enter an amount greater than 0 and a receipt code.")
     conn.close()
-    c09c854baf0fb95
 elif page == "Manage Transactions":
         st.title("Delete Incorrect Transactions")
         
