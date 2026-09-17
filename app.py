@@ -384,7 +384,7 @@ elif page == "Log Payment":
             else:
                 st.error("Please enter an amount greater than 0 and a receipt code.")
     conn.close()
-    6c09c854baf0fb953215bf72398c9719a59efcd1
+    c09c854baf0fb95
 elif page == "Manage Transactions":
         st.title("Delete Incorrect Transactions")
         
