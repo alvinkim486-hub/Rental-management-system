@@ -315,7 +315,6 @@ elif page == "Manage Units":
 
     with st.form("update_unit_form"):
         st.write(f"### Editing Unit {selected_unit}")
-
         new_tenant = st.text_input("Tenant Name (Clear this if they move out)", value=unit_data['tenant_name'])
         status_options = ["Vacant", "Occupied & Paid", "Occupied & Arrears"]
         new_status = st.selectbox("Status", status_options, index=status_options.index(unit_data['status']))
@@ -385,7 +384,7 @@ elif page == "Log Payment":
             else:
                 st.error("Please enter an amount greater than 0 and a receipt code.")
     conn.close()
->>>>>>> 6c09c854baf0fb953215bf72398c9719a59efcd1
+    6c09c854baf0fb953215bf72398c9719a59efcd1
 elif page == "Manage Transactions":
         st.title("Delete Incorrect Transactions")
         
