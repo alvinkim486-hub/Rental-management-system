@@ -226,7 +226,7 @@ elif page == "Manage Transactions":
                 
                 if st.form_submit_button("Permanently Delete Transaction"):
                     c = conn.cursor()
-                    c.execute("DELETE FROM payments WHERE id = %s", (selected_id,))
+                    c.execute("DELETE FROM payments WHERE id = ?", (selected_id,))
                     conn.commit()
                     st.success("Transaction deleted successfully!")
         else:
