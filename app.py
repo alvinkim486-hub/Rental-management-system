@@ -232,44 +232,7 @@ st.set_page_config(page_title="Rental Dashboard", layout="wide")
 st.sidebar.title("Landlord Controls")
 page = st.sidebar.radio("Navigation", ["Dashboard Overview", "Manage Units", "Log Payment"])
 
-if page == "Dashboard Overview":
-    st.title("Financial & Occupancy Dashboard")
 
-    conn = get_db_connection()
-    units_df = pd.read_sql_query("SELECT * FROM units", conn)
-    # Only calculate rent income for the dashboard, exclude deposits
-    payments_df = pd.read_sql_query("SELECT * FROM payments", conn)
-    rent_payments = pd.read_sql_query("SELECT * FROM payments WHERE payment_type LIKE '%Rent%'", conn)
-    conn.close()
-
-    # Dynamic Calculations
-    total_expected = units_df['rent_amount'].sum()
-    total_rent_collected = rent_payments['amount'].sum() if not rent_payments.empty else 0
-    total_deposits_held = units_df['deposit_held'].sum()
-    occupied_units = len(units_df[units_df['status'].str.contains('Occupied')])
-
-    # Top Metrics
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Rent Logged", f"KSh {total_rent_collected:,.2f}")
-    col2.metric("Total Deposits Held", f"KSh {total_deposits_held:,.2f}")
-    col3.metric("Expected Monthly Rent", f"KSh {total_expected:,.2f}")
-    col4.metric("Occupancy", f"{occupied_units}/12 Units")
-
-    st.divider()
-
-    col_left, col_right = st.columns(2)
-
-    with col_left:
-        st.subheader("Unit Status & Balances")
-        # Display unit statuses along with their custom rent and held deposits
-        st.dataframe(units_df[['unit_name', 'tenant_name', 'status', 'rent_amount', 'deposit_held']], use_container_width=True)
-
-    with col_right:
-        st.subheader("Recent Transactions")
-        if not payments_df.empty:
-            st.dataframe(payments_df[['date', 'unit_name', 'payment_type', 'amount', 'mpesa_receipt']].sort_values(by="date", ascending=False).head(10), use_container_width=True)
-        else:
-            st.info("No transactions logged yet.")
 
 elif page == "Manage Units":
     st.title("Move In / Move Out & Adjust Rent")
