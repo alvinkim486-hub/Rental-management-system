@@ -52,7 +52,7 @@ def get_db_connection():
 st.set_page_config(page_title="Rental Dashboard", layout="wide")
 
 st.sidebar.title("Landlord Controls")
-page = st.sidebar.radio("Navigation", ["Dashboard Overview", "Manage Units", "Log Payment"])
+page = st.sidebar.radio("Navigation", ["Dashboard Overview", "Manage Units", "Log Payment", "Manage Transactions"])
 
 if page == "Dashboard Overview":
         st.title("Financial & Occupancy Dashboard")
