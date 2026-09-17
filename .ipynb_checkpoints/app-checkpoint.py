@@ -53,7 +53,7 @@ def get_db_connection():
 st.set_page_config(page_title="Rental Dashboard", layout="wide")
 
 st.sidebar.title("Landlord Controls")
-page = st.sidebar.radio("Navigation", ["Dashboard Overview", "Manage Units", "Log Payment", "Manage Transactions"])
+page = st.sidebar.radio("Navigation", ["Dashboard Overview", "Manage Units", "Log Payment"])
 
 if page == "Dashboard Overview":
     st.title("Financial & Occupancy Dashboard")
@@ -353,30 +353,3 @@ elif page == "Log Payment":
                 st.error("Please enter an amount greater than 0 and a receipt code.")
     conn.close()
 >>>>>>> 6c09c854baf0fb953215bf72398c9719a59efcd1
-elif page == "Manage Transactions":
-        st.title("Delete Incorrect Transactions")
-        
-        conn = get_db_connection()
-        payments_df = pd.read_sql_query("SELECT * FROM payments ORDER BY id DESC", conn)
-        
-        if not payments_df.empty:
-            st.write("Warning: Deleting a transaction here removes it from your financial records. If this transaction altered a deposit balance, you must manually fix the deposit in the 'Manage Units' tab.")
-            
-            # Create a dropdown menu to select the transaction easily
-            payments_df['label'] = payments_df['date'] + " | " + payments_df['unit_name'] + " | " + payments_df['payment_type'] + " | KSh " + payments_df['amount'].astype(str) + " | " + payments_df['mpesa_receipt']
-            
-            with st.form("delete_transaction_form"):
-                selected_label = st.selectbox("Select Transaction to Delete", payments_df['label'])
-                
-                # Extract the hidden ID of the transaction to delete it safely
-                selected_id = int(payments_df[payments_df['label'] == selected_label]['id'].values[0])
-                
-                if st.form_submit_button("Permanently Delete Transaction"):
-                    c = conn.cursor()
-                    c.execute("DELETE FROM payments WHERE id = %s", (selected_id,))
-                    conn.commit()
-                    st.success("Transaction deleted successfully!")
-        else:
-            st.info("No transactions logged yet.")
-            
-        conn.close()
